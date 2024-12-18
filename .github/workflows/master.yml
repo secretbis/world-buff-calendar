@@ -1,0 +1,42 @@
+name: main
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  CI: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.2'
+      - run: npm install
+      - run: npm test
+
+      - name: Docker Build and Publish
+        uses: elgohr/Publish-Docker-Github-Action@2.14
+        with:
+          name: secretbis/world-buff-calendar
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+          registry: registry.hub.docker.com
+          tags: main
+          snapshot: true
+
+      - name: Setup Deploy
+        uses: matootie/dokube@v1.3.4
+        with:
+          personalAccessToken: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          clusterName: secretbis
+
+      - name: Deploy
+        run: |
+          kubectl -n rcc apply -f deploy/cronjob.yml

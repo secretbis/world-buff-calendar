@@ -1,0 +1,34 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: world-buff-calendar
+spec:
+  schedule: '*/5 * * * *'
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: world-buff-calendar-cron
+              imagePullPolicy: Always
+              image: registry.hub.docker.com/secretbis/world-buff-calendar:main
+              env:
+                - name: NODE_DEBUG
+                  value: rcc
+                - name: DISCORD_BOT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      key: DISCORD_BOT_TOKEN
+                      name: discord-token
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      key: AWS_ACCESS_KEY_ID
+                      name: aws-user
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: AWS_SECRET_ACCESS_KEY
+                      name: aws-user
+          restartPolicy: OnFailure
